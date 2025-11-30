@@ -1,4 +1,4 @@
-import { createSchema, createYoga } from "graphql-yoga";
+import { createSchema } from "graphql-yoga";
 import { resolvers } from "./resolvers";
 
 const typeDefs = /* GraphQL */ `
@@ -15,19 +15,40 @@ const typeDefs = /* GraphQL */ `
     reason: String
   }
 
+  type UserResponse {
+    message: String!
+    user: User
+  }
+
+  type LeaveResponse {
+    message: String!
+    leave: Leave
+  }
+
+  type MessageResponse {
+    message: String!
+  }
+
   type Query {
+    users: [User!]!
     leaves: [Leave!]!
     myLeaves(userId: Int!): [Leave!]!
   }
 
   type Mutation {
-    requestLeave(userId: Int!, date: String!, reason: String): Leave!
-    updateLeave(id: Int!, userId: Int!, date: String, reason: String): Leave!
-    deleteLeave(id: Int!, userId: Int!): Boolean!
+    createUser(name: String!, email: String!): UserResponse!
+    deleteUser(id: Int!): MessageResponse!
+    requestLeave(userId: Int!, date: String!, reason: String): LeaveResponse!
+    updateLeave(
+      id: Int!
+      userId: Int!
+      date: String
+      reason: String
+    ): LeaveResponse!
+    deleteLeave(id: Int!, userId: Int!): MessageResponse!
   }
 `;
 
-// Merge typeDefs + resolvers into a single schema
 export const schema = createSchema({
   typeDefs,
   resolvers,

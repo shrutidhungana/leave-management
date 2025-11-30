@@ -1,4 +1,5 @@
-import { pgTable, serial, text, date, timestamp } from "drizzle-orm/pg-core";
+
+import { pgTable, serial, text, date, timestamp, integer } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -8,7 +9,7 @@ export const users = pgTable("users", {
 
 export const leaves = pgTable("leaves", {
   id: serial("id").primaryKey(),
-  userId: serial("user_id")
+  userId: integer("user_id")
     .notNull()
     .references(() => users.id),
   date: date("date").notNull(),
