@@ -22,26 +22,54 @@ export const resolvers = {
   },
 
   Query: {
-    users: async () => db.select().from(users),
+    users: async (_: any, __: any, context: any) => {
+      const currentUser = context.currentUser;
+      if (!currentUser) throw new Error("Not authorized");
+      
+      if (currentUser.role !== "admin") throw new Error("Not authorized");
+      return db.select().from(users);
+    },
     leaves: async () => db.select().from(leaves),
     myLeaves: async (_: any, { userId }: any) =>
       db.select().from(leaves).where(eq(leaves.userId, userId)),
   },
 
   Mutation: {
-    
     signup: async (_: any, args: any) => {
-      const { name, email, password } = args;
-      const hashed = await hashPassword(password);
+  try {
+    const { name, email, password, role } = args;
 
-      const [user] = await db
-        .insert(users)
-        .values({ name, email, password: hashed })
-        .returning();
-      const token = generateToken(user.id);
+    
+    const [existing] = await db.select().from(users).where(eq(users.email, email));
+    if (existing) {
+      throw new Error("Email already registered");
+    }
 
-      return { user, token };
-    },
+    const hashed = await hashPassword(password);
+
+   
+    await db.insert(users).values({
+      name,
+      email,
+      password: hashed,
+      ...(role ? { role } : {}),
+    });
+
+    
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+
+    if (!user) throw new Error("Failed to create user");
+
+    
+    const token = generateToken(user.id);
+
+    return { user, token };
+  } catch (err: any) {
+    console.error("Signup error:", err);
+    throw new Error(err.message || "Signup failed");
+  }
+},
+
 
     login: async (_: any, { email, password }: any) => {
       const [user] = await db
@@ -62,17 +90,25 @@ export const resolvers = {
       const currentUser = context.currentUser;
       if (!currentUser) throw new Error("Not authorized");
 
+     
+      if (currentUser.role !== "admin") throw new Error("Not authorized");
+
       const { name, email } = createUserSchema.parse(args);
+      const hashed = await hashPassword("defaultPassword123"); // default password
       const [user] = await db
         .insert(users)
-        .values({ name, email, password: "" })
+        .values({ name, email, password: hashed, role: args.role || "employee" })
         .returning();
+
       return { message: "User created successfully", user };
     },
 
     deleteUser: async (_: any, args: any, context: any) => {
       const currentUser = context.currentUser;
       if (!currentUser) throw new Error("Not authorized");
+
+      
+      if (currentUser.role !== "admin") throw new Error("Not authorized");
 
       const { id } = deleteUserSchema.parse(args);
 
@@ -86,7 +122,7 @@ export const resolvers = {
       return { message: "User and related leaves deleted successfully" };
     },
 
-
+    
     requestLeave: async (_: any, args: any, context: any) => {
       const currentUser = context.currentUser;
       if (!currentUser) throw new Error("Not authorized");
