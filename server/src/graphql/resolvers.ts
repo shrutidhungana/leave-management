@@ -8,6 +8,7 @@ import {
   updateLeaveSchema,
   deleteLeaveSchema,
 } from "./validators";
+import { hashPassword, comparePassword, generateToken } from "../helpers/auth";
 
 export const resolvers = {
   Leave: {
@@ -28,19 +29,51 @@ export const resolvers = {
   },
 
   Mutation: {
-    // --------------- USERS -----------------
-    createUser: async (_: any, args: any) => {
-      const { name, email } = createUserSchema.parse(args);
+    
+    signup: async (_: any, args: any) => {
+      const { name, email, password } = args;
+      const hashed = await hashPassword(password);
 
-      const [user] = await db.insert(users).values({ name, email }).returning();
+      const [user] = await db
+        .insert(users)
+        .values({ name, email, password: hashed })
+        .returning();
+      const token = generateToken(user.id);
 
-      return {
-        message: "User created successfully",
-        user,
-      };
+      return { user, token };
     },
 
-    deleteUser: async (_: any, args: any) => {
+    login: async (_: any, { email, password }: any) => {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+      if (!user) throw new Error("Invalid email or password");
+
+      const match = await comparePassword(password, user.password);
+      if (!match) throw new Error("Invalid email or password");
+
+      const token = generateToken(user.id);
+      return { user, token };
+    },
+
+   
+    createUser: async (_: any, args: any, context: any) => {
+      const currentUser = context.currentUser;
+      if (!currentUser) throw new Error("Not authorized");
+
+      const { name, email } = createUserSchema.parse(args);
+      const [user] = await db
+        .insert(users)
+        .values({ name, email, password: "" })
+        .returning();
+      return { message: "User created successfully", user };
+    },
+
+    deleteUser: async (_: any, args: any, context: any) => {
+      const currentUser = context.currentUser;
+      if (!currentUser) throw new Error("Not authorized");
+
       const { id } = deleteUserSchema.parse(args);
 
       const existing = await db.select().from(users).where(eq(users.id, id));
@@ -53,12 +86,14 @@ export const resolvers = {
       return { message: "User and related leaves deleted successfully" };
     },
 
-    // --------------- LEAVES -----------------
-    requestLeave: async (_: any, args: any) => {
+
+    requestLeave: async (_: any, args: any, context: any) => {
+      const currentUser = context.currentUser;
+      if (!currentUser) throw new Error("Not authorized");
+
       const { userId, date, reason, remarks } = requestLeaveSchema.parse(args);
 
-      const [user] = await db.select().from(users).where(eq(users.id, userId));
-      if (!user) throw new Error("User not found");
+      if (currentUser.id !== userId) throw new Error("Not authorized");
 
       const [inserted] = await db
         .insert(leaves)
@@ -68,28 +103,41 @@ export const resolvers = {
       return { message: "Leave requested successfully", leave: inserted };
     },
 
-    updateLeave: async (_: any, args: any) => {
-      const { id, userId, date, reason, remarks } = updateLeaveSchema.parse(args);
+    updateLeave: async (_: any, args: any, context: any) => {
+      const currentUser = context.currentUser;
+      if (!currentUser) throw new Error("Not authorized");
+
+      const { id, userId, date, reason, remarks } =
+        updateLeaveSchema.parse(args);
+
+      if (currentUser.id !== userId) throw new Error("Not authorized");
 
       const existing = await db.select().from(leaves).where(eq(leaves.id, id));
       if (!existing[0]) throw new Error("Leave not found");
-      if (existing[0].userId !== userId) throw new Error("Not authorized");
 
       const [updated] = await db
         .update(leaves)
-        .set({ date: date ? new Date(date).toISOString() : undefined, reason, remarks })
+        .set({
+          date: date ? new Date(date).toISOString() : undefined,
+          reason,
+          remarks,
+        })
         .where(eq(leaves.id, id))
         .returning();
 
       return { message: "Leave updated successfully", leave: updated };
     },
 
-    deleteLeave: async (_: any, args: any) => {
+    deleteLeave: async (_: any, args: any, context: any) => {
+      const currentUser = context.currentUser;
+      if (!currentUser) throw new Error("Not authorized");
+
       const { id, userId } = deleteLeaveSchema.parse(args);
+
+      if (currentUser.id !== userId) throw new Error("Not authorized");
 
       const existing = await db.select().from(leaves).where(eq(leaves.id, id));
       if (!existing[0]) throw new Error("Leave not found");
-      if (existing[0].userId !== userId) throw new Error("Not authorized");
 
       await db.delete(leaves).where(eq(leaves.id, id));
       return { message: "Leave deleted successfully" };

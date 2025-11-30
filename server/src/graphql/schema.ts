@@ -29,6 +29,10 @@ const typeDefs = /* GraphQL */ `
   type MessageResponse {
     message: String!
   }
+  type AuthResponse {
+    token: String!
+    user: User!
+  }
 
   type Query {
     users: [User!]!
@@ -37,6 +41,8 @@ const typeDefs = /* GraphQL */ `
   }
 
   type Mutation {
+    login(email: String!, password: String!): AuthResponse!
+    signup(name: String!, email: String!, password: String!): AuthResponse!
     createUser(name: String!, email: String!): UserResponse!
     deleteUser(id: Int!): MessageResponse!
     requestLeave(
