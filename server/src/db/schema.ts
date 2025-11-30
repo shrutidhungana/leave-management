@@ -14,5 +14,6 @@ export const leaves = pgTable("leaves", {
     .references(() => users.id),
   date: date("date").notNull(),
   reason: text("reason"),
+  remarks: text("remarks").default(""),
   createdAt: timestamp("created_at").defaultNow(),
 });

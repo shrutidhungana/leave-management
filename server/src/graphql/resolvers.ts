@@ -55,21 +55,21 @@ export const resolvers = {
 
     // --------------- LEAVES -----------------
     requestLeave: async (_: any, args: any) => {
-      const { userId, date, reason } = requestLeaveSchema.parse(args);
+      const { userId, date, reason, remarks } = requestLeaveSchema.parse(args);
 
       const [user] = await db.select().from(users).where(eq(users.id, userId));
       if (!user) throw new Error("User not found");
 
       const [inserted] = await db
         .insert(leaves)
-        .values({ userId, date: new Date(date).toISOString(), reason })
+        .values({ userId, date: new Date(date).toISOString(), reason, remarks })
         .returning();
 
       return { message: "Leave requested successfully", leave: inserted };
     },
 
     updateLeave: async (_: any, args: any) => {
-      const { id, userId, date, reason } = updateLeaveSchema.parse(args);
+      const { id, userId, date, reason, remarks } = updateLeaveSchema.parse(args);
 
       const existing = await db.select().from(leaves).where(eq(leaves.id, id));
       if (!existing[0]) throw new Error("Leave not found");
@@ -77,7 +77,7 @@ export const resolvers = {
 
       const [updated] = await db
         .update(leaves)
-        .set({ date: date ? new Date(date).toISOString() : undefined, reason })
+        .set({ date: date ? new Date(date).toISOString() : undefined, reason, remarks })
         .where(eq(leaves.id, id))
         .returning();
 

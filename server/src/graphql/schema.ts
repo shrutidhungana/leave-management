@@ -13,6 +13,7 @@ const typeDefs = /* GraphQL */ `
     user: User!
     date: String!
     reason: String
+    remarks: String
   }
 
   type UserResponse {
@@ -38,13 +39,19 @@ const typeDefs = /* GraphQL */ `
   type Mutation {
     createUser(name: String!, email: String!): UserResponse!
     deleteUser(id: Int!): MessageResponse!
-    requestLeave(userId: Int!, date: String!, reason: String): LeaveResponse!
+    requestLeave(
+      userId: Int!
+      date: String!
+      reason: String
+      remarks: String
+    ): Leave!
     updateLeave(
       id: Int!
       userId: Int!
       date: String
       reason: String
-    ): LeaveResponse!
+      remarks: String
+    ): Leave!
     deleteLeave(id: Int!, userId: Int!): MessageResponse!
   }
 `;

@@ -15,6 +15,7 @@ export const requestLeaveSchema = z.object({
     message: "Invalid date format",
   }),
   reason: z.string().max(255).optional(),
+  remarks: z.string().max(500).optional(),
 });
 
 export const updateLeaveSchema = z.object({
@@ -27,6 +28,7 @@ export const updateLeaveSchema = z.object({
     })
     .optional(),
   reason: z.string().max(255).optional(),
+  remarks: z.string().max(500).optional(),
 });
 
 export const deleteLeaveSchema = z.object({
