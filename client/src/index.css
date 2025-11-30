@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+  --color-bg: oklch(80% 0 0); 
+  --color-text: oklch(20% 0 0); 
+  --color-primary: oklch(60% 0.1 260); 
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+html {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border-radius: 0.375rem; /* Tailwind md rounded */
+  transition: all 0.2s ease-in-out;
+}
+input, textarea, select {
+  font-family: var(--font-sans);
+  padding: 0.5rem;
+  border: 1px solid oklch(60% 0 0); /* soft gray border */
+  border-radius: 0.375rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px oklch(60% 0.1 260 / 0.3);
+}
+
