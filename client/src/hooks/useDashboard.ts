@@ -16,7 +16,8 @@ export const useDashboard = (userId: string) => {
         query MyLeaves($userId: Int!) {
           myLeaves(userId: $userId) {
             id
-            date
+            startDate
+            endDate
             reason
             remarks
             user {
@@ -43,7 +44,7 @@ export const useDashboard = (userId: string) => {
       const upcomingLeave =
         sortedLeaves.find((leave) => new Date(leave.date) > new Date()) ?? undefined;
       
-   console.log("API response:", res.data);
+   
    console.log({ totalLeaves, remainingPaidLeaves, lastLeave, upcomingLeave });
 
       return {

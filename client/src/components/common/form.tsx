@@ -13,10 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-
 
 export type FormControlType = {
   name: string;
@@ -101,29 +104,47 @@ export function Form<T extends Record<string, any>>({
         );
 
       case "date":
+  return (
+    <Controller
+      name={controlItem.name as any}
+      control={control}
+      render={({ field }) => {
+        const selectedRange = field.value; // { from: Date | null, to: Date | null } | null
         return (
-          <Controller
-            name={controlItem.name as any}
-            control={control}
-            render={({ field }) => (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    {field.value ? format(field.value, "PPP") : controlItem.placeholder}
-                    <CalendarIcon className="ml-2 h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="p-0">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                {selectedRange?.from
+                  ? `${format(selectedRange.from, "PPP")} ${
+                      selectedRange.to
+                        ? ` - ${format(selectedRange.to, "PPP")}`
+                        : ""
+                    }`
+                  : controlItem.placeholder}
+                <CalendarIcon className="ml-2 h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="p-0 bg-gray-100 ">
+              <Calendar
+                mode="range"
+                selected={selectedRange}
+                onSelect={field.onChange}
+                className="bg-gray-100 rounded-lg"
+                classNames={{
+                  day: "hover:bg-gray-200 rounded-lg",
+                  table: "bg-gray-100",
+                  range_start: "bg-orange-300 text-white",
+                  range_end: "bg-orange-300 text-white",
+                  
+                }}
+              />
+            </PopoverContent>
+          </Popover>
         );
+      }}
+    />
+  );
+
 
       default:
         return null;
@@ -134,17 +155,22 @@ export function Form<T extends Record<string, any>>({
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {controls.map((c) => (
-          <div key={c.name} className="flex flex-col gap-1">
-            <Label>{c.label}</Label>
+          <div key={c.name} className="flex flex-col gap-6">
+            <Label className="text-xl text-orange-500 font-bold ">
+              {c.label}
+            </Label>
             {renderField(c)}
           </div>
         ))}
 
-        <Button type="submit" className="w-full bg" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full bg-orange-300 hover:bg-orange-500 text-white font-semibold py-4 rounded-xl shadow-md text-lg transition-all duration-300"
+          disabled={isSubmitting}
+        >
           {submitText}
         </Button>
       </form>
     </FormProvider>
   );
 }
-

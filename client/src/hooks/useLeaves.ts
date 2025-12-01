@@ -15,7 +15,8 @@ export const useLeaves = (userId: string) => {
         query MyLeaves($userId: Int!) {
           myLeaves(userId: $userId) {
             id
-            date
+            startDate
+            endDate
             reason
             remarks
             user { id name }
@@ -37,7 +38,8 @@ export const useLeaves = (userId: string) => {
         query {
           leaves {
             id
-            date
+            startDate
+            endDate
             reason
             remarks
             user { id name }
@@ -53,22 +55,32 @@ export const useLeaves = (userId: string) => {
   const requestLeaveMutation = useMutation({
     mutationFn: async (leave: {
       userId: number;
-      date: string;
+      startDate: string;
+      endDate: string;
       reason: string;
       remarks?: string;
     }) => {
       const mutation = `
-        mutation RequestLeave($userId: Int!, $date: String!, $reason: String!, $remarks: String) {
-          requestLeave(userId: $userId, date: $date, reason: $reason, remarks: $remarks) {
+        mutation RequestLeave(
+          $userId: Int!
+          $startDate: String!
+          $endDate: String!
+          $reason: String!
+          $remarks: String
+        ) {
+          requestLeave(
+            userId: $userId
+            startDate: $startDate
+            endDate: $endDate
+            reason: $reason
+            remarks: $remarks
+          ) {
             message
             leave { id }
           }
         }
       `;
-      const res = await api.post("", {
-        query: mutation,
-        variables: leave,
-      });
+      const res = await api.post("", { query: mutation, variables: leave });
       return res.data.data.requestLeave;
     },
     onSuccess: (data) => {
@@ -85,13 +97,28 @@ export const useLeaves = (userId: string) => {
     mutationFn: async (leave: {
       id: number;
       userId: number;
-      date: string;
+      startDate: string;
+      endDate: string;
       reason: string;
       remarks?: string;
     }) => {
       const mutation = `
-        mutation UpdateLeave($id: Int!, $userId: Int!, $date: String!, $reason: String!, $remarks: String) {
-          updateLeave(id: $id, userId: $userId, date: $date, reason: $reason, remarks: $remarks) {
+        mutation UpdateLeave(
+          $id: Int!
+          $userId: Int!
+          $startDate: String!
+          $endDate: String!
+          $reason: String!
+          $remarks: String
+        ) {
+          updateLeave(
+            id: $id
+            userId: $userId
+            startDate: $startDate
+            endDate: $endDate
+            reason: $reason
+            remarks: $remarks
+          ) {
             message
             leave { id }
           }

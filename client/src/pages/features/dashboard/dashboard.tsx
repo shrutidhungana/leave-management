@@ -7,15 +7,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
+import { CardSkeleton } from "@/components/skeletons/card-skeleton";
 
 type DashboardProps = {
   userId: string;
@@ -23,140 +15,161 @@ type DashboardProps = {
 
 const Dashboard: React.FC<DashboardProps> = ({ userId }) => {
   const { data: stats, isLoading, isError } = useDashboard(userId);
-
-  console.log({stats})
+  console.log({ stats });
 
   if (isLoading)
     return (
-      <p className="text-center py-10 text-gray-400 text-lg">Loading...</p>
+      <p className="text-center py-20 text-gray-400 text-xl animate-pulse">
+        <CardSkeleton />
+      </p>
     );
 
   if (isError || !stats)
     return (
-      <p className="text-center py-10 text-red-500 text-lg">
+      <p className="text-center py-20 text-red-500 text-xl font-semibold">
         Failed to load dashboard
       </p>
     );
 
-  // Prepare data for chart
-  const chartData = stats.totalLeaves
+  const remainingPercentage = Math.round((stats.remainingPaidLeaves / 5) * 100);
+
+  // 🔥 Construct recentLeaves since backend does NOT provide it
+  const recentLeaves = stats.lastLeave
     ? [
-        { name: "Total", leaves: stats.totalLeaves },
-        { name: "Remaining", leaves: stats.remainingPaidLeaves },
+        {
+          date: stats.lastLeave.startDate,
+          reason: stats.lastLeave.reason,
+          remarks: stats.lastLeave.remarks,
+        },
       ]
-    : [{ name: "No Data", leaves: 0 }];
+    : [];
 
   return (
-    <div className= "flex flex-col gap-6 p-6" >
-    <h1 className="font-bold text-3xl">Dashboard</h1>
-      {/* Top Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-r from-indigo-100 to-indigo-200 shadow-lg rounded-xl hover:scale-105 transition-transform duration-300">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-indigo-800">
-              📝 Total Leaves
-            </CardTitle>
-            <CardDescription>
-              {stats.totalLeaves > 0 ? stats.totalLeaves : "None yet"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-indigo-900 font-bold text-2xl text-center mt-2">
-              {stats.totalLeaves > 0
-                ? stats.totalLeaves + " days"
-                : "No leaves taken"}
-            </div>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-50 p-8">
+      <div className="max-w-[1800px] mx-auto flex flex-col gap-10">
+        <h1 className="text-5xl font-extrabold text-gray-900 mb-6">
+          Dashboard
+        </h1>
 
-        <Card className="bg-gradient-to-r from-green-100 to-green-200 shadow-lg rounded-xl hover:scale-105 transition-transform duration-300">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-800">
-              ✅ Remaining Paid Leaves
-            </CardTitle>
-            <CardDescription>{stats.remainingPaidLeaves} / 5</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="w-full bg-green-200 rounded-full h-4 mt-2 overflow-hidden">
-              <div
-                className="bg-green-600 h-4 rounded-full transition-all duration-500"
-                style={{ width: `${(stats.remainingPaidLeaves / 5) * 100}%` }}
-              />
-            </div>
-            <div className="text-green-900 font-semibold text-center mt-2">
-              {stats.remainingPaidLeaves} days left
-            </div>
-          </CardContent>
-        </Card>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Total Leaves */}
+          <Card className="bg-indigo-50 shadow-lg rounded-2xl p-6 hover:shadow-2xl transition-shadow duration-300 flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-indigo-800">
+                📝 Total Leaves
+              </CardTitle>
+              <CardDescription className="text-sm text-indigo-600">
+                {stats.totalLeaves > 0
+                  ? `${stats.totalLeaves} days taken`
+                  : "None yet"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="mt-6">
+              <div className="text-4xl font-bold text-indigo-900 text-center">
+                {stats.totalLeaves > 0 ? stats.totalLeaves : 0}
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-r from-pink-100 to-pink-200 shadow-lg rounded-xl hover:scale-105 transition-transform duration-300">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-pink-800">
-              📅 Last Leave
-            </CardTitle>
-            <CardDescription>
-              {stats.lastLeave?.date
-                ? new Date(stats.lastLeave.date).toDateString()
-                : "N/A"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-pink-900 font-semibold text-center mt-2">
+          {/* Remaining Paid Leaves */}
+          <Card className="bg-green-50 shadow-lg rounded-2xl p-6 hover:shadow-2xl transition-shadow duration-300 flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-green-800">
+                ✅ Remaining Paid Leaves
+              </CardTitle>
+              <CardDescription className="text-sm text-green-600">
+                {stats.remainingPaidLeaves} / 5
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="mt-6">
+              <div className="w-full bg-green-100 rounded-full h-4 overflow-hidden">
+                <div
+                  className="bg-green-600 h-4 rounded-full transition-all duration-500"
+                  style={{ width: `${remainingPercentage}%` }}
+                />
+              </div>
+              <div className="text-green-900 font-semibold text-center mt-2">
+                {stats.remainingPaidLeaves} days left
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Last Leave */}
+          <Card className="bg-pink-50 shadow-lg rounded-2xl p-6 hover:shadow-2xl transition-shadow duration-300 flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-pink-800">
+                📅 Last Leave
+              </CardTitle>
+              <CardDescription className="text-sm text-pink-600">
+                {stats.lastLeave?.startDate
+                  ? new Date(stats.lastLeave.startDate).toDateString()
+                  : "N/A"}{" "}
+                -{" "}
+                {stats.lastLeave?.endDate
+                  ? new Date(stats.lastLeave.endDate).toDateString()
+                  : "N/A"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="mt-6 text-center text-pink-900 font-medium">
               {stats.lastLeave?.reason || "No leaves taken yet"}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-r from-yellow-100 to-yellow-200 shadow-lg rounded-xl hover:scale-105 transition-transform duration-300">
+          {/* Leave Summary */}
+          <Card className="bg-yellow-50 shadow-lg rounded-2xl p-6 hover:shadow-2xl transition-shadow duration-300 flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-yellow-800">
+                🧾 Leave Summary
+              </CardTitle>
+              <CardDescription className="text-sm text-yellow-600">
+                Quick glance at your leaves
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="mt-6 text-center text-yellow-900 font-medium">
+              Total: {stats.totalLeaves} | Remaining:{" "}
+              {stats.remainingPaidLeaves}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Leaves Table */}
+        <Card className="bg-white shadow-lg rounded-2xl p-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-800">
-              ⏳ Upcoming Leave
+            <CardTitle className="text-lg font-semibold text-gray-800">
+              Recent Leaves
             </CardTitle>
-            <CardDescription>
-              {stats.upcomingLeave?.date
-                ? new Date(stats.upcomingLeave.date).toDateString()
-                : "None"}
+            <CardDescription className="text-sm text-gray-500">
+              Your last leave records
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-yellow-900 font-semibold text-center mt-2">
-              {stats.upcomingLeave?.reason || "—"}
-            </div>
+
+          <CardContent className="mt-4">
+            {recentLeaves.length ? (
+              <ul className="divide-y divide-gray-200">
+                {recentLeaves.slice(0, 5).map((leave, idx) => (
+                  <li
+                    key={idx}
+                    className="py-3 flex justify-between items-center"
+                  >
+                    <span className="text-gray-700 font-medium">
+                      {new Date(leave.date).toDateString()}
+                    </span>
+                    <span className="text-gray-800 font-semibold">
+                      {leave.reason}
+                    </span>
+                    <span className="text-gray-800 font-semibold">
+                      {leave.remarks}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 text-center">No leaves taken yet.</p>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Chart Section */}
-      <Card className="bg-white shadow-lg rounded-xl p-4">
-        <CardHeader>
-          <CardTitle className="text-gray-800 text-lg font-semibold">
-            Leave Overview
-          </CardTitle>
-          <CardDescription>
-            Visual representation of your leave stats
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
-              margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="leaves"
-                stroke="#4f46e5"
-                strokeWidth={3}
-                activeDot={{ r: 8 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
     </div>
   );
 };

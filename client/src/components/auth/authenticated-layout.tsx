@@ -10,7 +10,7 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({
   children,
 }) => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen ">
       <Navbar logoSrc="/logo.png" navItems={navItems} />
       <main className="p-6">{children}</main>
     </div>

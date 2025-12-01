@@ -1,4 +1,3 @@
-
 import React, { ReactNode } from "react";
 
 type AuthLayoutProps = {
@@ -13,19 +12,16 @@ export default function AuthLayout({
   subtitle,
 }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-6">
-      <div className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-12 backdrop-blur-sm animate-fadeIn">
-        <div className="text-center mb-10">
-          <h1 className="text-5xl font-extrabold text-orange-600 dark:text-blue-400 tracking-wide">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="mt-3 text-lg text-gray-700 dark:text-gray-300">
-              {subtitle}
-            </p>
-          )}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-xl bg-gray-100 rounded-2xl p-12 shadow-md">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-[#0B3D91]">{title}</h1>
+          {subtitle && <p className="mt-2 text-sm text-sky-500">{subtitle}</p>}
         </div>
-        <div>{children}</div>
+
+        
+        <div className="space-y-6">{children}</div>
+
       </div>
     </div>
   );

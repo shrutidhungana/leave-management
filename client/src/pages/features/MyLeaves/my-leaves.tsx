@@ -1,16 +1,21 @@
 
+
 import { useState } from "react";
 import { CustomTable } from "../../../components/leaves/table";
 import { useLeaves } from "../../../hooks/useLeaves";
 import RequestLeaveSheet from "./request-leaves-drawer";
 import DeleteModal from "@/components/leaves/modals/DeleteModal";
+import * as dfnsTz from "date-fns-tz"; 
 import { format } from "date-fns";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Plus } from "lucide-react";
+
+const NEPAL_TZ = "Asia/Kathmandu";
 
 const MyLeavesTable = ({ userId }: { userId: string }) => {
   const { myLeavesQuery, deleteLeaveMutation } = useLeaves(userId);
 
   const leaves = myLeavesQuery.data || [];
+  
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editLeave, setEditLeave] = useState<any | null>(null);
@@ -21,9 +26,16 @@ const MyLeavesTable = ({ userId }: { userId: string }) => {
 
   const columns = [
     {
-      header: "Date",
-      accessorKey: "date",
-      cell: (info: any) => format(new Date(info.getValue()), "dd MMM yyyy"),
+      header: "Date Range",
+      accessorKey: "startDate",
+      cell: (info: any) => {
+        const row = info.row.original;
+
+        const start = dfnsTz.toZonedTime(new Date(row.startDate), NEPAL_TZ);
+        const end = dfnsTz.toZonedTime(new Date(row.endDate), NEPAL_TZ);
+
+        return `${format(start, "dd-MMM-yyyy")} → ${format(end, "dd-MMM-yyyy")}`;
+      },
     },
     {
       header: "Reason",
@@ -69,17 +81,27 @@ const MyLeavesTable = ({ userId }: { userId: string }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-800">My Leaves</h2>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-6 mb-6 gap-4">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
+            My Leaves
+          </h2>
+          <p className="text-gray-500 mt-1 text-sm md:text-base">
+            View, edit, or request your leaves here
+          </p>
+        </div>
 
         <button
-          className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+          className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 
+               text-white font-semibold rounded-xl shadow-md hover:from-indigo-700 hover:to-indigo-600 
+               transition duration-300 ease-in-out"
           onClick={() => {
             setEditLeave(null); // ensure fresh form
             setDrawerOpen(true);
           }}
         >
-          Request Leave
+          <Plus className="w-5 h-5" />
+          <span>Request Leave</span>
         </button>
       </div>
 
