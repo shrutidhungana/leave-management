@@ -24,6 +24,8 @@ type DashboardProps = {
 const Dashboard: React.FC<DashboardProps> = ({ userId }) => {
   const { data: stats, isLoading, isError } = useDashboard(userId);
 
+  console.log({stats})
+
   if (isLoading)
     return (
       <p className="text-center py-10 text-gray-400 text-lg">Loading...</p>
@@ -45,7 +47,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userId }) => {
     : [{ name: "No Data", leaves: 0 }];
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className= "flex flex-col gap-6 p-6" >
+    <h1 className="font-bold text-3xl">Dashboard</h1>
       {/* Top Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-gradient-to-r from-indigo-100 to-indigo-200 shadow-lg rounded-xl hover:scale-105 transition-transform duration-300">

@@ -3,6 +3,7 @@ import { NavItem as NavItemType } from "../../types/nav";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "react-router-dom";
+import { useLogout } from "@/hooks/useAuth"; // import the hook
 
 type NavbarProps = {
   logoSrc?: string;
@@ -10,6 +11,8 @@ type NavbarProps = {
 };
 
 const Navbar: React.FC<NavbarProps> = ({ logoSrc = "/logo.png", navItems = [] }) => {
+  const logoutMutation = useLogout();
+
   return (
     <TooltipProvider>
       <nav className="w-full bg-navbar-gradient backdrop-blur-md shadow-xl px-6 py-3 flex items-center justify-between rounded-b-xl">
@@ -23,10 +26,13 @@ const Navbar: React.FC<NavbarProps> = ({ logoSrc = "/logo.png", navItems = [] })
         <div className="flex items-center space-x-3">
           {navItems.map((item) => {
             const Icon = item.icon;
+
+            const isLogout = item.title.toLowerCase() === "logout";
+
             return (
               <Tooltip key={item.title}>
                 <TooltipTrigger asChild>
-                  {item.href ? (
+                  {item.href && !isLogout ? (
                     <Link to={item.href}>
                       <Button
                         variant="ghost"
@@ -42,6 +48,9 @@ const Navbar: React.FC<NavbarProps> = ({ logoSrc = "/logo.png", navItems = [] })
                       variant="ghost"
                       size="sm"
                       className="flex items-center space-x-1 text-navbar-text hover:text-primary hover:bg-navbar-hover transition-all duration-200"
+                      onClick={() => {
+                        if (isLogout) logoutMutation.mutate();
+                      }}
                     >
                       <Icon className="w-5 h-5" />
                       <span className="font-medium">{item.title}</span>
@@ -59,5 +68,3 @@ const Navbar: React.FC<NavbarProps> = ({ logoSrc = "/logo.png", navItems = [] })
 };
 
 export default Navbar;
-
-

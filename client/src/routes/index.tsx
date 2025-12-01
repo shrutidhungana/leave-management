@@ -5,11 +5,16 @@ import SignupPage from "@/pages/auth/signup";
 import LoginPage from "@/pages/auth/login";
 import DashboardWrapper from "@/pages/features/dashboard/dashboard-wrapper";
 import AuthenticatedLayout from "@/components/auth/authenticated-layout";
-import Leaves from "@/pages/features/leaves";
-import MyLeaves from "@/pages/features/my-leaves";
+import AllLeaves from "@/pages/features/all-leaves/leaves";
+import MyLeavesWrapper from "@/pages/features/MyLeaves/my-leaves-wrapper";
+import LandingPage from "@/pages";
 
 
 export const routes = createBrowserRouter([
+  {
+    path: "/",
+    element: <LandingPage />,
+  },
   {
     path: "/signup",
     element: <SignupPage />,
@@ -30,7 +35,7 @@ export const routes = createBrowserRouter([
     path: "/my-leaves",
     element: (
       <AuthenticatedLayout>
-        <MyLeaves />
+        <MyLeavesWrapper />
       </AuthenticatedLayout>
     ),
   },
@@ -38,7 +43,7 @@ export const routes = createBrowserRouter([
     path: "/leaves",
     element: (
       <AuthenticatedLayout>
-        <Leaves />
+        <AllLeaves />
       </AuthenticatedLayout>
     ),
   },

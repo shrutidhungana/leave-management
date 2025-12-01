@@ -78,6 +78,40 @@ export const useLogin = () => {
   });
 };
 
+export const useLogout = () => {
+  const { success, error } = useToast();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: async () => {
+      const query = `
+        mutation {
+          logout {
+            message
+          }
+        }
+      `;
+      const res = await api.post("", { query });
+      return res.data.data.logout;
+    },
+
+    onSuccess: (data) => {
+     
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("userId");
+
+      success(data.message || "Logged out successfully");
+
+      // Redirect to root
+      navigate("/");
+    },
+
+    onError: (err: any) => {
+      error(err.message || "Logout failed");
+    },
+  });
+};
 
 export const useAuth = () => {
   const token = localStorage.getItem("token");
