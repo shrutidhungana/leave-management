@@ -14,19 +14,19 @@ export const comparePassword = async (password: string, hash: string) => {
   return await bcrypt.compare(password, hash);
 };
 
-export const generateToken = (userId: number) => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
-};
-
-export const verifyToken = (token: string) => {
+export const generateToken = (user: any) => {
+  return jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
+    expiresIn: "7d",
+  });
+};export const verifyToken = (token: string) => {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: number };
+    return jwt.verify(token, JWT_SECRET) as { userId: number; role: string };
   } catch {
     return null;
   }
 };
 
-// Optional: get user by token
+
 export const getUserFromToken = async (token: string) => {
   const payload = verifyToken(token);
   if (!payload) return null;

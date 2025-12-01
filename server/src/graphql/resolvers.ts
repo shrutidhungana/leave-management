@@ -25,7 +25,7 @@ export const resolvers = {
     users: async (_: any, __: any, context: any) => {
       const currentUser = context.currentUser;
       if (!currentUser) throw new Error("Not authorized");
-      
+
       if (currentUser.role !== "admin") throw new Error("Not authorized");
       return db.select().from(users);
     },
@@ -36,40 +36,41 @@ export const resolvers = {
 
   Mutation: {
     signup: async (_: any, args: any) => {
-  try {
-    const { name, email, password, role } = args;
+      try {
+        const { name, email, password, role } = args;
 
-    
-    const [existing] = await db.select().from(users).where(eq(users.email, email));
-    if (existing) {
-      throw new Error("Email already registered");
-    }
+        const [existing] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email));
+        if (existing) {
+          throw new Error("Email already registered");
+        }
 
-    const hashed = await hashPassword(password);
+        const hashed = await hashPassword(password);
 
-   
-    await db.insert(users).values({
-      name,
-      email,
-      password: hashed,
-      ...(role ? { role } : {}),
-    });
+        await db.insert(users).values({
+          name,
+          email,
+          password: hashed,
+          ...(role ? { role } : {}),
+        });
 
-    
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email));
 
-    if (!user) throw new Error("Failed to create user");
+        if (!user) throw new Error("Failed to create user");
 
-    
-    const token = generateToken(user.id);
+        const token = generateToken(user);
 
-    return { user, token };
-  } catch (err: any) {
-    console.error("Signup error:", err);
-    throw new Error(err.message || "Signup failed");
-  }
-},
-
+        return { user, token };
+      } catch (err: any) {
+        console.error("Signup error:", err);
+        throw new Error(err.message || "Signup failed");
+      }
+    },
 
     login: async (_: any, { email, password }: any) => {
       const [user] = await db
@@ -81,23 +82,26 @@ export const resolvers = {
       const match = await comparePassword(password, user.password);
       if (!match) throw new Error("Invalid email or password");
 
-      const token = generateToken(user.id);
+      const token = generateToken(user);
       return { user, token };
     },
 
-   
     createUser: async (_: any, args: any, context: any) => {
       const currentUser = context.currentUser;
       if (!currentUser) throw new Error("Not authorized");
 
-     
       if (currentUser.role !== "admin") throw new Error("Not authorized");
 
       const { name, email } = createUserSchema.parse(args);
       const hashed = await hashPassword("defaultPassword123"); // default password
       const [user] = await db
         .insert(users)
-        .values({ name, email, password: hashed, role: args.role || "employee" })
+        .values({
+          name,
+          email,
+          password: hashed,
+          role: args.role || "employee",
+        })
         .returning();
 
       return { message: "User created successfully", user };
@@ -107,7 +111,6 @@ export const resolvers = {
       const currentUser = context.currentUser;
       if (!currentUser) throw new Error("Not authorized");
 
-      
       if (currentUser.role !== "admin") throw new Error("Not authorized");
 
       const { id } = deleteUserSchema.parse(args);
@@ -122,7 +125,6 @@ export const resolvers = {
       return { message: "User and related leaves deleted successfully" };
     },
 
-    
     requestLeave: async (_: any, args: any, context: any) => {
       const currentUser = context.currentUser;
       if (!currentUser) throw new Error("Not authorized");
@@ -177,6 +179,10 @@ export const resolvers = {
 
       await db.delete(leaves).where(eq(leaves.id, id));
       return { message: "Leave deleted successfully" };
+    },
+    logout: async (_: any, __: any, context: any) => {
+      if (!context.currentUser) throw new Error("Not authorized");
+      return { message: "Logged out successfully" };
     },
   },
 };

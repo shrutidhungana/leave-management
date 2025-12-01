@@ -1,3 +1,4 @@
+// graphql/schema.ts
 import { createSchema } from "graphql-yoga";
 import { resolvers } from "./resolvers";
 
@@ -6,6 +7,7 @@ const typeDefs = /* GraphQL */ `
     id: ID!
     name: String!
     email: String!
+    role: String!
   }
 
   type Leave {
@@ -29,6 +31,7 @@ const typeDefs = /* GraphQL */ `
   type MessageResponse {
     message: String!
   }
+
   type AuthResponse {
     token: String!
     user: User!
@@ -42,23 +45,31 @@ const typeDefs = /* GraphQL */ `
 
   type Mutation {
     login(email: String!, password: String!): AuthResponse!
-    signup(name: String!, email: String!, password: String!): AuthResponse!
-    createUser(name: String!, email: String!): UserResponse!
+    signup(
+      name: String!
+      email: String!
+      password: String!
+      role: String
+    ): AuthResponse!
+    createUser(name: String!, email: String!, role: String): UserResponse!
     deleteUser(id: Int!): MessageResponse!
+
     requestLeave(
       userId: Int!
       date: String!
       reason: String
       remarks: String
-    ): Leave!
+    ): LeaveResponse!
     updateLeave(
       id: Int!
       userId: Int!
       date: String
       reason: String
       remarks: String
-    ): Leave!
+    ): LeaveResponse!
     deleteLeave(id: Int!, userId: Int!): MessageResponse!
+
+    logout: MessageResponse!
   }
 `;
 
