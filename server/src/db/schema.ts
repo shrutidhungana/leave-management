@@ -1,5 +1,11 @@
-
-import { pgTable, serial, text, date, timestamp, integer, } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  text,
+  date,
+  timestamp,
+  integer,
+} from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -14,7 +20,8 @@ export const leaves = pgTable("leaves", {
   userId: integer("user_id")
     .notNull()
     .references(() => users.id),
-  date: date("date").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
   reason: text("reason"),
   remarks: text("remarks").default(""),
   createdAt: timestamp("created_at").defaultNow(),

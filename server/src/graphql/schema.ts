@@ -1,4 +1,3 @@
-// graphql/schema.ts
 import { createSchema } from "graphql-yoga";
 import { resolvers } from "./resolvers";
 
@@ -13,14 +12,10 @@ const typeDefs = /* GraphQL */ `
   type Leave {
     id: ID!
     user: User!
-    date: String!
+    startDate: String!
+    endDate: String!
     reason: String
     remarks: String
-  }
-
-  type UserResponse {
-    message: String!
-    user: User
   }
 
   type LeaveResponse {
@@ -51,24 +46,28 @@ const typeDefs = /* GraphQL */ `
       password: String!
       role: String
     ): AuthResponse!
-    createUser(name: String!, email: String!, role: String): UserResponse!
+
+    createUser(name: String!, email: String!, role: String): MessageResponse!
     deleteUser(id: Int!): MessageResponse!
 
     requestLeave(
       userId: Int!
-      date: String!
+      startDate: String!
+      endDate: String!
       reason: String
       remarks: String
     ): LeaveResponse!
+
     updateLeave(
       id: Int!
       userId: Int!
-      date: String
+      startDate: String
+      endDate: String
       reason: String
       remarks: String
     ): LeaveResponse!
-    deleteLeave(id: Int!, userId: Int!): MessageResponse!
 
+    deleteLeave(id: Int!, userId: Int!): MessageResponse!
     logout: MessageResponse!
   }
 `;

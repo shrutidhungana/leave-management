@@ -1,14 +1,8 @@
 import { db } from "../db/drizzle";
 import { users, leaves } from "../db/schema";
 import { eq } from "drizzle-orm";
-import {
-  createUserSchema,
-  deleteUserSchema,
-  requestLeaveSchema,
-  updateLeaveSchema,
-  deleteLeaveSchema,
-} from "./validators";
 import { hashPassword, comparePassword, generateToken } from "../helpers/auth";
+import { format } from "date-fns";
 
 export const resolvers = {
   Leave: {
@@ -24,52 +18,40 @@ export const resolvers = {
   Query: {
     users: async (_: any, __: any, context: any) => {
       const currentUser = context.currentUser;
-      if (!currentUser) throw new Error("Not authorized");
-
-      if (currentUser.role !== "admin") throw new Error("Not authorized");
+      if (!currentUser || currentUser.role !== "admin")
+        throw new Error("Not authorized");
       return db.select().from(users);
     },
+
     leaves: async () => db.select().from(leaves),
-    myLeaves: async (_: any, { userId }: any) =>
-      db.select().from(leaves).where(eq(leaves.userId, userId)),
+
+    myLeaves: async (_: any, { userId }: any) => {
+      return db.select().from(leaves).where(eq(leaves.userId, userId));
+    },
   },
 
   Mutation: {
     signup: async (_: any, args: any) => {
-      try {
-        const { name, email, password, role } = args;
+      const { name, email, password, role } = args;
+      const [existing] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+      if (existing) throw new Error("Email already registered");
 
-        const [existing] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, email));
-        if (existing) {
-          throw new Error("Email already registered");
-        }
+      const hashed = await hashPassword(password);
 
-        const hashed = await hashPassword(password);
+      await db
+        .insert(users)
+        .values({ name, email, password: hashed, ...(role ? { role } : {}) });
 
-        await db.insert(users).values({
-          name,
-          email,
-          password: hashed,
-          ...(role ? { role } : {}),
-        });
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+      const token = generateToken(user);
 
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, email));
-
-        if (!user) throw new Error("Failed to create user");
-
-        const token = generateToken(user);
-
-        return { user, token };
-      } catch (err: any) {
-        console.error("Signup error:", err);
-        throw new Error(err.message || "Signup failed");
-      }
+      return { user, token };
     },
 
     login: async (_: any, { email, password }: any) => {
@@ -86,22 +68,23 @@ export const resolvers = {
       return { user, token };
     },
 
+    logout: async (_: any, __: any, context: any) => {
+      if (!context.currentUser) throw new Error("Not authorized");
+      // For JWT-based auth, logout is usually handled client-side by deleting token
+      return { message: "Logged out successfully" };
+    },
+
     createUser: async (_: any, args: any, context: any) => {
       const currentUser = context.currentUser;
-      if (!currentUser) throw new Error("Not authorized");
+      if (!currentUser || currentUser.role !== "admin")
+        throw new Error("Not authorized");
 
-      if (currentUser.role !== "admin") throw new Error("Not authorized");
-
-      const { name, email } = createUserSchema.parse(args);
+      const { name, email, role } = args;
       const hashed = await hashPassword("defaultPassword123"); // default password
+
       const [user] = await db
         .insert(users)
-        .values({
-          name,
-          email,
-          password: hashed,
-          role: args.role || "employee",
-        })
+        .values({ name, email, password: hashed, role: role || "employee" })
         .returning();
 
       return { message: "User created successfully", user };
@@ -109,11 +92,10 @@ export const resolvers = {
 
     deleteUser: async (_: any, args: any, context: any) => {
       const currentUser = context.currentUser;
-      if (!currentUser) throw new Error("Not authorized");
+      if (!currentUser || currentUser.role !== "admin")
+        throw new Error("Not authorized");
 
-      if (currentUser.role !== "admin") throw new Error("Not authorized");
-
-      const { id } = deleteUserSchema.parse(args);
+      const { id } = args;
 
       const existing = await db.select().from(users).where(eq(users.id, id));
       if (!existing[0]) throw new Error("User not found");
@@ -126,63 +108,61 @@ export const resolvers = {
     },
 
     requestLeave: async (_: any, args: any, context: any) => {
-      const currentUser = context.currentUser;
-      if (!currentUser) throw new Error("Not authorized");
+  const { userId, startDate, endDate, reason, remarks } = args;
+  const currentUser = context.currentUser;
+  if (!currentUser || currentUser.id !== userId)
+    throw new Error("Not authorized");
 
-      const { userId, date, reason, remarks } = requestLeaveSchema.parse(args);
+  // Convert to 'YYYY-MM-DD' format
+  const start = format(new Date(startDate), "yyyy-MM-dd");
+      const end = format(new Date(endDate), "yyyy-MM-dd");
 
-      if (currentUser.id !== userId) throw new Error("Not authorized");
+  const [inserted] = await db.insert(leaves)
+    .values({
+      userId,
+      startDate: start,
+      endDate: end,
+      reason,
+      remarks,
+    })
+    .returning();
 
-      const [inserted] = await db
-        .insert(leaves)
-        .values({ userId, date: new Date(date).toISOString(), reason, remarks })
-        .returning();
+  return { message: "Leave requested successfully", leave: inserted };
+},
 
-      return { message: "Leave requested successfully", leave: inserted };
-    },
+   updateLeave: async (_: any, args: any, context: any) => {
+  const { id, userId, startDate, endDate, reason, remarks } = args;
+  const currentUser = context.currentUser;
+  if (!currentUser || currentUser.id !== userId)
+    throw new Error("Not authorized");
 
-    updateLeave: async (_: any, args: any, context: any) => {
-      const currentUser = context.currentUser;
-      if (!currentUser) throw new Error("Not authorized");
+  const existing = await db.select().from(leaves).where(eq(leaves.id, id));
+  if (!existing[0]) throw new Error("Leave not found");
 
-      const { id, userId, date, reason, remarks } =
-        updateLeaveSchema.parse(args);
+  const updatedStart = startDate ? format(new Date(startDate), "yyyy-MM-dd") : undefined;
+  const updatedEnd = endDate ? format(new Date(endDate), "yyyy-MM-dd") : undefined;
 
-      if (currentUser.id !== userId) throw new Error("Not authorized");
+  const [updated] = await db.update(leaves)
+    .set({
+      startDate: updatedStart,
+      endDate: updatedEnd,
+      reason,
+      remarks,
+    })
+    .where(eq(leaves.id, id))
+    .returning();
 
-      const existing = await db.select().from(leaves).where(eq(leaves.id, id));
-      if (!existing[0]) throw new Error("Leave not found");
-
-      const [updated] = await db
-        .update(leaves)
-        .set({
-          date: date ? new Date(date).toISOString() : undefined,
-          reason,
-          remarks,
-        })
-        .where(eq(leaves.id, id))
-        .returning();
-
-      return { message: "Leave updated successfully", leave: updated };
-    },
+  return { message: "Leave updated successfully", leave: updated };
+},
 
     deleteLeave: async (_: any, args: any, context: any) => {
+      const { id, userId } = args;
       const currentUser = context.currentUser;
-      if (!currentUser) throw new Error("Not authorized");
-
-      const { id, userId } = deleteLeaveSchema.parse(args);
-
-      if (currentUser.id !== userId) throw new Error("Not authorized");
-
-      const existing = await db.select().from(leaves).where(eq(leaves.id, id));
-      if (!existing[0]) throw new Error("Leave not found");
+      if (!currentUser || currentUser.id !== userId)
+        throw new Error("Not authorized");
 
       await db.delete(leaves).where(eq(leaves.id, id));
       return { message: "Leave deleted successfully" };
-    },
-    logout: async (_: any, __: any, context: any) => {
-      if (!context.currentUser) throw new Error("Not authorized");
-      return { message: "Logged out successfully" };
     },
   },
 };

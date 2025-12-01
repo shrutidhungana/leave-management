@@ -41,6 +41,7 @@
     "@hono/node-server": "^1.19.6",
     "@trpc/server": "^11.7.2",
     "bcrypt": "^6.0.0",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "graphql": "^16.12.0",
