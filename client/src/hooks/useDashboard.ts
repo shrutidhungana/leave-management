@@ -45,7 +45,7 @@ export const useDashboard = (userId: string) => {
         sortedLeaves.find((leave) => new Date(leave.date) > new Date()) ?? undefined;
       
    
-   console.log({ totalLeaves, remainingPaidLeaves, lastLeave, upcomingLeave });
+  
 
       return {
         totalLeaves,

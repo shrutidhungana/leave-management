@@ -15,7 +15,7 @@ type DashboardProps = {
 
 const Dashboard: React.FC<DashboardProps> = ({ userId }) => {
   const { data: stats, isLoading, isError } = useDashboard(userId);
-  console.log({ stats });
+ 
 
   if (isLoading)
     return (
