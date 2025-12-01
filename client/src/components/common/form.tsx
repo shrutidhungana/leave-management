@@ -27,10 +27,12 @@ export type FormControlType = {
   options?: { id: string; label: string }[];
 };
 
+import { DefaultValues } from "react-hook-form";
+
 type FormProps<T> = {
   controls: FormControlType[];
   onSubmit: (values: T) => void;
-  defaultValues: T;
+  defaultValues: DefaultValues<T>;
   submitText?: string;
   isSubmitting?: boolean;
 };

@@ -7,6 +7,7 @@ export interface User {
 
 export interface AuthResponse {
   user: {
+    role(arg0: string, role: any): unknown;
     id: number;
     name?: string;
     email: string;

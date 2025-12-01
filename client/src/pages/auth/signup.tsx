@@ -4,7 +4,7 @@ import { Form } from "@/components/common/form";
 import { signupFormControls } from "@/config/auth";
 import { useSignup } from "@/hooks/useAuth";
 import type { SignupData } from "@/types/auth";
-import { Link, useNavigate } from "react-router-dom"; 
+import { Link} from "react-router-dom"; 
 
 export default function SignupPage() {
   const [defaultValues] = useState<SignupData>({
